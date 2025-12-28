@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DualFarm - Smart Farming Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .demo-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #059669;
+        }
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        .btn-secondary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #2563eb;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card-title {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .card-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .card-unit {
+            font-size: 18px;
+            color: #9ca3af;
+        }
+        .card-hint {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 5px;
+        }
+        .normal { color: #10b981; }
+        .warning { color: #f59e0b; }
+        .critical { color: #ef4444; }
+        .alerts {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .alert-item {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid;
+        }
+        .alert-warning {
+            background: #fef3c7;
+            border-color: #f59e0b;
+        }
+        .alert-critical {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-on {
+            background: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+        .status-off {
+            background: #6b7280;
+        }
+        .message {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        pre {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            max-height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌱 DualFarm <span class="demo-badge">DEMO MODE</span></h1>
+            <p style="margin-top: 10px; color: #6b7280;">AI-Assisted Smart Farming System</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="startSimulator()">▶ Start Simulator</button>
+            <button class="btn btn-danger" onclick="stopSimulator()">⏸ Stop Simulator</button>
+            <button class="btn btn-secondary" onclick="pumpOn()">Pump ON</button>
+            <button class="btn btn-danger" onclick="pumpOff()">Pump OFF</button>
+            <button class="btn btn-secondary" onclick="generateReport()">📊 Generate Report</button>
+            <button class="btn btn-secondary" onclick="exportCSV()">📥 Export CSV</button>
+            <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh</button>
+        </div>
+
+        <div id="message" style="display: none;" class="message"></div>
+
+        <div class="card" style="margin-bottom: 20px;">
+            <h3>System Status</h3>
+            <p id="lastUpdate" style="color: #6b7280; font-size: 14px; margin-top: 5px;">Loading...</p>
+            <div style="margin-top: 15px;">
+                <span class="status-indicator" id="pumpIndicator"></span>
+                <span id="pumpStatus">Pump OFF</span>
+                <span style="margin-left: 20px;"></span>
+                <span class="status-indicator" id="simIndicator"></span>
+                <span id="simStatus">Simulator OFF</span>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">TDS (Nutrients)</div>
+                <div class="card-value" id="tds">--</div>
+                <span class="card-unit">ppm</span>
+                <div class="card-hint">Target: 500-1100 ppm</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Water Temperature</div>
+                <div class="card-value" id="temp">--</div>
+                <span class="card-unit">°C</span>
+                <div class="card-hint">Target: 15-35°C</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Water Level</div>
+                <div class="card-value" id="water">--</div>
+                <span class="card-unit">cm</span>
+                <div class="card-hint">Minimum: 10 cm</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Active Alerts</div>
+                <div class="card-value critical" id="alertCount">0</div>
+                <span class="card-unit">alerts</span>
+                <div class="card-hint" id="alertHint">All normal</div>
+            </div>
+        </div>
+
+        <div class="alerts" id="alertsContainer">
+            <h3>Active Alerts</h3>
+            <p id="noAlerts" style="color: #10b981; margin-top: 15px;">✅ No active alerts - All systems operating normally</p>
+            <div id="alertsList"></div>
+        </div>
+
+        <div class="card" id="reportContainer" style="display: none;">
+            <h3>RoboCraft Report</h3>
+            <pre id="reportContent"></pre>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        async function fetchData() {
+            try {
+                const [latest, alerts] = await Promise.all([
+                    fetch(`${API_BASE}/api/sensors/latest`).then(r => r.json()),
+                    fetch(`${API_BASE}/api/alerts/latest`).then(r => r.json())
+                ]);
+
+                // Update sensor values
+                const tdsEl = document.getElementById('tds');
+                tdsEl.textContent = latest.tds_ppm.toFixed(1);
+                tdsEl.className = 'card-value ' + getTDSStatus(latest.tds_ppm);
+
+                document.getElementById('temp').textContent = latest.temperature_c.toFixed(1);
+                document.getElementById('water').textContent = latest.water_level_cm.toFixed(1);
+                document.getElementById('lastUpdate').textContent = 'Last updated: ' + new Date(latest.timestamp).toLocaleString();
+
+                // Update pump status
+                const pumpOn = latest.pump_state === 'ON';
+                document.getElementById('pumpIndicator').className = 'status-indicator ' + (pumpOn ? 'status-on' : 'status-off');
+                document.getElementById('pumpStatus').textContent = 'Pump ' + latest.pump_state;
+
+                // Update alerts
+                document.getElementById('alertCount').textContent = alerts.length;
+                document.getElementById('alertHint').textContent = alerts.length === 0 ? 'All normal' : 'Attention required';
+
+                if (alerts.length > 0) {
+                    document.getElementById('noAlerts').style.display = 'none';
+                    document.getElementById('alertsList').innerHTML = alerts.map(alert => `
+                        <div class="alert-item alert-${alert.severity}">
+                            <strong>${alert.alert_type.replace(/_/g, ' ').toUpperCase()}</strong>
+                            <p style="margin-top: 5px;">${alert.message}</p>
+                            <small style="opacity: 0.7;">${new Date(alert.timestamp).toLocaleString()}</small>
+                        </div>
+                    `).join('');
+                } else {
+                    document.getElementById('noAlerts').style.display = 'block';
+                    document.getElementById('alertsList').innerHTML = '';
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                showMessage('Error connecting to backend. Make sure it\'s running on port 8000.', 'error');
+            }
+        }
+
+        function getTDSStatus(tds) {
+            if (tds < 500 || tds > 1100) return 'critical';
+            if (tds < 600 || tds > 1000) return 'warning';
+            return 'normal';
+        }
+
+        async function startSimulator() {
+            try {
+                const response = await fetch(`${API_BASE}/api/simulate/start`, { method: 'POST' });
+                const data = await response.json();
+                showMessage('Simulator started! Data will update every 3 seconds.');
+                document.getElementById('simIndicator').className = 'status-indicator status-on';
+                document.getElementById('simStatus').textContent = 'Simulator ON';
+                setTimeout(fetchData, 1000);
+            } catch (error) {
+                showMessage('Error starting simulator', 'error');
+            }
+        }
+
+        async function stopSimulator() {
+            try {
+                await fetch(`${API_BASE}/api/simulate/stop`, { method: 'POST' });
+                showMessage('Simulator stopped');
+                document.getElementById('simIndicator').className = 'status-indicator status-off';
+                document.getElementById('simStatus').textContent = 'Simulator OFF';
+            } catch (error) {
+                showMessage('Error stopping simulator', 'error');
+            }
+        }
+
+        async function pumpOn() {
+            try {
+                await fetch(`${API_BASE}/api/control/pump`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ state: 'ON', user: 'dashboard' })
+                });
+                showMessage('Pump turned ON');
+                setTimeout(fetchData, 500);
+            } catch (error) {
+                showMessage('Error controlling pump', 'error');
+            }
+        }
+
+        async function pumpOff() {
+            try {
+                await fetch(`${API_BASE}/api/control/pump`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ state: 'OFF', user: 'dashboard' })
+                });
+                showMessage('Pump turned OFF');
+                setTimeout(fetchData, 500);
+            } catch (error) {
+                showMessage('Error controlling pump', 'error');
+            }
+        }
+
+        async function generateReport() {
+            try {
+                const response = await fetch(`${API_BASE}/api/report/robocraft`);
+                const data = await response.json();
+                document.getElementById('reportContent').textContent = data.report_markdown;
+                document.getElementById('reportContainer').style.display = 'block';
+                showMessage('Report generated! Scroll down to view.');
+            } catch (error) {
+                showMessage('Error generating report', 'error');
+            }
+        }
+
+        function exportCSV() {
+            window.open(`${API_BASE}/api/report/export/csv`, '_blank');
+            showMessage('CSV export started - check your downloads folder');
+        }
+
+        function refreshData() {
+            fetchData();
+            showMessage('Data refreshed');
+        }
+
+        function showMessage(msg, type = 'success') {
+            const msgEl = document.getElementById('message');
+            msgEl.textContent = msg;
+            msgEl.style.display = 'block';
+            msgEl.style.background = type === 'error' ? '#fee2e2' : '#d1fae5';
+            msgEl.style.borderColor = type === 'error' ? '#ef4444' : '#10b981';
+            msgEl.style.color = type === 'error' ? '#991b1b' : '#065f46';
+            setTimeout(() => {
+                msgEl.style.display = 'none';
+            }, 3000);
+        }
+
+        // Auto-refresh every 3 seconds
+        setInterval(fetchData, 3000);
+
+        // Initial load
+        fetchData();
+    </script>
+</body>
+</html>
